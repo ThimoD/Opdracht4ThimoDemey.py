@@ -39,10 +39,9 @@ choice = input("Do you want to use the hard-coded access token? (y/n)? ")
 if choice == "n" or choice == "N":
     accessToken = input("Please enter your access token. ")
     accessToken = "Bearer " + accessToken
-    
+
 else:
     accessToken = "Bearer NmU0YjlhMDUtZmE3MC00MTJhLWFkM2YtMGU4OTIyNGQzN2VjMDE2ZTg3MDEtYWZk_PF84_consumer"
-
 
 #######################################################################################
 #     Using the requests library, create a new HTTP GET Request against the Webex Teams API Endpoint for Webex Teams Rooms:
@@ -53,17 +52,15 @@ else:
 #     Modify the code below to use the Webex Teams room API endpoint (URL)
 
 
-
-r = requests.get(   "https://api.ciscospark.com/v1/rooms",
-                    headers = {"Authorization": accessToken}
-                )
+r = requests.get("https://api.ciscospark.com/v1/rooms",
+                 headers={"Authorization": accessToken}
+                 )
 
 #######################################################################################
 # Check if the response from the API call was OK (r. code 200)
 #######################################################################################
 if not r.status_code == 200:
     raise Exception("Incorrect reply from Webex Teams API. Status code: {}. Text: {}".format(r.status_code, r.text))
-
 
 #######################################################################################
 # Displays a list of rooms.
@@ -74,7 +71,7 @@ if not r.status_code == 200:
 print("List of rooms:")
 rooms = r.json()["items"]
 for room in rooms:
-    print (room["title"])
+    print(room["title"])
 
 #######################################################################################
 # Searches for name of the room and displays the room
@@ -86,13 +83,12 @@ while True:
 
     # Defines a variable that will hold the roomId 
     roomIdToGetMessages = None
-    
+
     for room in rooms:
         # Searches for the room "title" using the variable roomNameToSearch 
-        if(room["title"].find(roomNameToSearch) != -1):
-
+        if (room["title"].find(roomNameToSearch) != -1):
             # Displays the rooms found using the variable roomNameToSearch (additional options included)
-            print ("Found rooms with the word " + roomNameToSearch)
+            print("Found rooms with the word " + roomNameToSearch)
             print(room["title"])
 
             # Stores room id and room title into variables
@@ -101,15 +97,17 @@ while True:
             print("Found room : " + roomTitleToGetMessages)
             break
 
-    if(roomIdToGetMessages == None):
+    if (roomIdToGetMessages == None):
         print("Sorry, I didn't find any room with " + roomNameToSearch + " in it.")
         print("Please try again...")
     else:
         break
-def schrijftextwebex(eenstring):
+
+
+def schrijftextwebex(Text):
     post_data = {
         "roomId": roomIdToGetMessages,
-        "text":eenstring
+        "text": Text
     }
 
     r = requests.post("https://api.ciscospark.com/v1/messages",
@@ -117,46 +115,40 @@ def schrijftextwebex(eenstring):
                       headers={"Authorization": accessToken,
                                "Content-Type": "application/json"})
     if not r.status_code == 200:
-        raise Exception( "Incorrect reply from Webex Teams API. Status code: {}. Text: {}".format(r.status_code, r.text))
+        raise Exception("Incorrect reply from Webex Teams API. Status code: {}. Text: {}".format(r.status_code, r.text))
     return
 
-# run the "bot" loop until manually stopped or an exception occurred
+
+
+
 while True:
-    # always add 1 second of delay to the loop to not go over a rate limit of API calls
+
     time.sleep(1)
 
-    # the Webex Teams GET parameters
-    #  "roomId" is is ID of the selected room
-    #  "max": 1  limits to get only the very last message in the room
     GetParameters = {
-                            "roomId": roomIdToGetMessages,
-                            "max": 1
-                         }
-
-    
-    # run the call against the messages endpoint of the Webex Teams API using the HTTP GET method
-    r = requests.get("https://api.ciscospark.com/v1/messages", 
-                         params = GetParameters, 
-                         headers = {"Authorization": accessToken}
-                    )
-    # verify if the retuned HTTP status code is 200/OK
+        "roomId": roomIdToGetMessages,
+        "max": 1
+    }
+    r = requests.get("https://api.ciscospark.com/v1/messages",
+                     params=GetParameters,
+                     headers={"Authorization": accessToken}
+                     )
     if not r.status_code == 200:
-        raise Exception( "Incorrect reply from Webex Teams API. Status code: {}. Text: {}".format(r.status_code, r.text))
-    
-    # get the JSON formatted returned data
+        raise Exception("Incorrect reply from Webex Teams API. Status code: {}. Text: {}".format(r.status_code, r.text))
+
     json_data = r.json()
-    # check if there are any messages in the "items" array
     if len(json_data["items"]) == 0:
         raise Exception("There are no messages in the room.")
-    
     # store the array of messages
     messages = json_data["items"]
     # store the text of the first message in the array
     message = messages[0]["text"]
     print("Received message: " + message)
 
- # Checking for /route #   
+    # Checking for /route #
     gevondenmessage = message.find("/route")
+
+
     if gevondenmessage == 0:
         schrijftextwebex('Geef uw startlocatie in met /route $locatie$')
 
@@ -204,15 +196,13 @@ while True:
                     # always add 1 second of delay to the loop to not go over a rate limit of API calls
                     time.sleep(1)
 
-                    # the Webex Teams GET parameters
-                    #  "roomId" is is ID of the selected room
-                    #  "max": 1  limits to get only the very last message in the room
+
                     GetParameters = {
                         "roomId": roomIdToGetMessages,
                         "max": 1
                     }
 
-                    # run the call against the messages endpoint of the Webex Teams API using the HTTP GET method
+
                     r = requests.get("https://api.ciscospark.com/v1/messages",
                                      params=GetParameters,
                                      headers={"Authorization": accessToken}
@@ -238,40 +228,10 @@ while True:
                     # Checking for /route #
                     gevondenmessage = message.find("/route")
                     if gevondenmessage == 0:
-                        dest=message[7:]
-                        print(orig)
-                        print(dest)
+                        dest = message[7:]
 
 
+# -------------------------------------------------------------------------------
 
 
-        
-
-        
-
-            
- 
-        
-
-
-        
-
-
-#-------------------------------------------------------------------------------
-
-    
-
-
-
-
-
-
-
-
-
-
-#-------------------------------------------------------------------------------
-
-
-
-
+# -------------------------------------------------------------------------------
