@@ -156,8 +156,8 @@ while True:
     print("Received message: " + message)
 
  # Checking for /route #   
-    gevondemessage = message.find("/route")
-    if gevondemessage == 0:
+    gevondenmessage = message.find("/route")
+    if gevondenmessage == 0:
         schrijftextwebex('Geef uw startlocatie in met /route $locatie$')
 
         while True:
@@ -195,7 +195,55 @@ while True:
             print("Received message: " + message)
 
             # Checking for /route #
-            gevondemessage = message.find("/route")
+            gevondenmessage = message.find("/route")
+            if gevondenmessage == 0:
+                orig = message[7:]
+                schrijftextwebex('Geef uw eindlocatie in met /route $locatie$')
+
+                while True:
+                    # always add 1 second of delay to the loop to not go over a rate limit of API calls
+                    time.sleep(1)
+
+                    # the Webex Teams GET parameters
+                    #  "roomId" is is ID of the selected room
+                    #  "max": 1  limits to get only the very last message in the room
+                    GetParameters = {
+                        "roomId": roomIdToGetMessages,
+                        "max": 1
+                    }
+
+                    # run the call against the messages endpoint of the Webex Teams API using the HTTP GET method
+                    r = requests.get("https://api.ciscospark.com/v1/messages",
+                                     params=GetParameters,
+                                     headers={"Authorization": accessToken}
+                                     )
+                    # verify if the retuned HTTP status code is 200/OK
+                    if not r.status_code == 200:
+                        raise Exception(
+                            "Incorrect reply from Webex Teams API. Status code: {}. Text: {}".format(r.status_code,
+                                                                                                     r.text))
+
+                    # get the JSON formatted returned data
+                    json_data = r.json()
+                    # check if there are any messages in the "items" array
+                    if len(json_data["items"]) == 0:
+                        raise Exception("There are no messages in the room.")
+
+                    # store the array of messages
+                    messages = json_data["items"]
+                    # store the text of the first message in the array
+                    message = messages[0]["text"]
+                    print("Received message: " + message)
+
+                    # Checking for /route #
+                    gevondenmessage = message.find("/route")
+                    if gevondenmessage == 0:
+                        dest=message[7:]
+                        print(orig)
+                        print(dest)
+
+
+
 
         
 
