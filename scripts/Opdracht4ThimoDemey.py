@@ -73,10 +73,6 @@ rooms = r.json()["items"]
 for room in rooms:
     print(room["title"])
 
-#######################################################################################
-# Searches for name of the room and displays the room
-#######################################################################################
-
 while True:
     # Input the name of the room to be searched 
     roomNameToSearch = input("Which room should be monitored for /route")
@@ -118,7 +114,7 @@ def schrijftextwebex(Text):
         raise Exception("Incorrect reply from Webex Teams API. Status code: {}. Text: {}".format(r.status_code, r.text))
     return
 
-
+schrijftextwebex("Start de bot met het commando /route")
 
 
 while True:
@@ -147,7 +143,6 @@ while True:
 
     # Checking for /route #
     gevondenmessage = message.find("/route")
-
 
     if gevondenmessage == 0:
         schrijftextwebex('Geef uw startlocatie in met /route $locatie$')
@@ -191,17 +186,15 @@ while True:
             if gevondenmessage == 0:
                 orig = message[7:]
                 schrijftextwebex('Geef uw eindlocatie in met /route $locatie$')
-
+                # Ophalen van eindlocatie
                 while True:
                     # always add 1 second of delay to the loop to not go over a rate limit of API calls
                     time.sleep(1)
-
 
                     GetParameters = {
                         "roomId": roomIdToGetMessages,
                         "max": 1
                     }
-
 
                     r = requests.get("https://api.ciscospark.com/v1/messages",
                                      params=GetParameters,
@@ -230,31 +223,25 @@ while True:
                     if gevondenmessage == 0:
                         dest = message[7:]
 
-                        beschrijving = ""
-
+                        beschrijving = "------------------------------\n"
 
                         main_api = "https://www.mapquestapi.com/directions/v2/route?"
 
                         key = "glMBkWdaVP2Qg4n9u7oisdqlxdKyACt1"
-
-
 
                         url: str = main_api + urllib.parse.urlencode({"key": key, "from": orig, "to": dest})
 
                         json_data = requests.get(url).json()
                         json_status = json_data["info"]["statuscode"]
 
-
                         for each in json_data["route"]["legs"][0]["maneuvers"]:
-                            beschrijving += ((each["narrative"]) + " (" + str("{:.2f}".format((each["distance"]) * 1.61) + " km)\n"))
+                            beschrijving += ((each["narrative"]) + " (" + str(
+                                "{:.2f}".format((each["distance"]) * 1.61) + " km).\n"))
+                        beschrijving += "------------------------------\n"
+                        beschrijving += "Start opnieuw door het commando /route in te voeren."
                         schrijftextwebex(beschrijving)
 
+                        break
 
-
-
-
-
-
-
-
+                break
 
