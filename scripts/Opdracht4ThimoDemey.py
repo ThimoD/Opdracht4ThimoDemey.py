@@ -230,8 +230,31 @@ while True:
                     if gevondenmessage == 0:
                         dest = message[7:]
 
+                        beschrijving = ""
 
-# -------------------------------------------------------------------------------
+
+                        main_api = "https://www.mapquestapi.com/directions/v2/route?"
+
+                        key = "glMBkWdaVP2Qg4n9u7oisdqlxdKyACt1"
 
 
-# -------------------------------------------------------------------------------
+
+                        url: str = main_api + urllib.parse.urlencode({"key": key, "from": orig, "to": dest})
+
+                        json_data = requests.get(url).json()
+                        json_status = json_data["info"]["statuscode"]
+
+
+                        for each in json_data["route"]["legs"][0]["maneuvers"]:
+                            beschrijving += ((each["narrative"]) + " (" + str("{:.2f}".format((each["distance"]) * 1.61) + " km)\n"))
+                        schrijftextwebex(beschrijving)
+
+
+
+
+
+
+
+
+
+
