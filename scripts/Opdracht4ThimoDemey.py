@@ -14,41 +14,22 @@ if choice == "n" or choice == "N":
 else:
     accessToken = "Bearer Mjk0YmQyZTItYzRlNy00YTJjLWFmNDctYjI1M2Y2Mjk2MDcwZWM0NWY3ZTMtNGJk_PF84_consumer"
 
-#######################################################################################
-#     Using the requests library, create a new HTTP GET Request against the Webex Teams API Endpoint for Webex Teams Rooms:
-#     the local object "r" will hold the returned data.
-#######################################################################################
-
-#  Student Step #3
-#     Modify the code below to use the Webex Teams room API endpoint (URL)
-
-
 r = requests.get("https://api.ciscospark.com/v1/rooms",
                  headers={"Authorization": accessToken}
                  )
 
-#######################################################################################
-# Check if the response from the API call was OK (r. code 200)
-#######################################################################################
 if not r.status_code == 200:
     raise Exception("Incorrect reply from Webex Teams API. Status code: {}. Text: {}".format(r.status_code, r.text))
 
-#######################################################################################
+
 # Displays a list of rooms.
-#
-# If you want to see additional key/value pairs such as roomID:
-#	print ("Room name: '" + room["title"] + "' room ID: " + room["id"])
-#######################################################################################
 print("List of rooms:")
 rooms = r.json()["items"]
 for room in rooms:
     print(room["title"])
 
 while True:
-    # Input the name of the room to be searched 
     roomNameToSearch = input("Which room should be monitored for /route")
-
-    # Defines a variable that will hold the roomId 
     roomIdToGetMessages = None
 
     for room in rooms:
@@ -117,10 +98,9 @@ def leestextwebex(optie):
                 if optie == 2:
                     locatie = message[7:]
                 invoer = optie
-                print(locatie)
+
         else:
-            print("niet klaar")
-            invoer = -1
+            raise Exception("Incorrect reply from Webex Teams API. Status code: {}. Text: {}".format(r.status_code, r.text))
     return locatie
 
 while True:
