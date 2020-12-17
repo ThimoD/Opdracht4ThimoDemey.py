@@ -1,39 +1,10 @@
-###############################################################
-# This program:
-# 1. Asks the user to enter an access token or use the hard coded access token
-# 2. Lists the users in Webex Teams rooms
-# 3. Asks the user which Webex Teams room to monitor for "/location" requests (e.g. /San Jose)
-# 4. Periodically monitors the selected Webex Team room for "/location" messages
-# 5. Discovers GPS coordinates for the "location" using MapQuest API
-# 6. Discovers the date and time of the next ISS flyover over the "location" using the ISS location API
-# 7. Sends the results back to the Webex Team room
-#
-# The student will:
-# 1. Enter the Webex Teams room API endpoint (URL)
-# 2. Provide the code to prompt the user for their access token else
-#    use the hard coded access token
-# 3. Provide the MapQuest API Key
-# 4. Extracts the longitude from the MapQuest API response using the specific key
-# 5. Convers Unix Epoch timestamp to a human readable format
-# 6. Enter the Webex Teams messages API endpoint (URL)
-###############################################################
-
-# Libraries
-
 import requests
 import json
 import time
 import urllib.parse
 
-#######################################################################################
-#     Ask the user to use either the hard-coded token (access token within the code)
-#     or for the user to input their access token.
-#     Assign the hard-coded or user-entered access token to the variable accessToken.
-#######################################################################################
-
-# Student Step #2
-#    Following this comment and using the accessToken variable below, modify the code to
-#    ask the user to use either hard-coded or user entered access token.
+# Webex API acces token (12 uur geldig)
+# https://developer.webex.com/docs/api/getting-started
 
 choice = input("Do you want to use the hard-coded access token? (y/n)? ")
 if choice == "n" or choice == "N":
@@ -41,7 +12,7 @@ if choice == "n" or choice == "N":
     accessToken = "Bearer " + accessToken
 
 else:
-    accessToken = "Bearer NmU0YjlhMDUtZmE3MC00MTJhLWFkM2YtMGU4OTIyNGQzN2VjMDE2ZTg3MDEtYWZk_PF84_consumer"
+    accessToken = "Bearer Mjk0YmQyZTItYzRlNy00YTJjLWFmNDctYjI1M2Y2Mjk2MDcwZWM0NWY3ZTMtNGJk_PF84_consumer"
 
 #######################################################################################
 #     Using the requests library, create a new HTTP GET Request against the Webex Teams API Endpoint for Webex Teams Rooms:
@@ -114,134 +85,58 @@ def schrijftextwebex(Text):
         raise Exception("Incorrect reply from Webex Teams API. Status code: {}. Text: {}".format(r.status_code, r.text))
     return
 
-schrijftextwebex("Start de bot met het commando /route")
 
+def leestextwebex(optie):
+    invoer = -1
 
-while True:
+    GetParameters = {"roomId": roomIdToGetMessages, "max": 1}
 
-    time.sleep(1)
+    while invoer == -1:
+        time.sleep(1)
+        r = requests.get("https://api.ciscospark.com/v1/messages",
+                         params=GetParameters,
+                         headers={"Authorization": accessToken}
+                         )
 
-    GetParameters = {
-        "roomId": roomIdToGetMessages,
-        "max": 1
-    }
-    r = requests.get("https://api.ciscospark.com/v1/messages",
-                     params=GetParameters,
-                     headers={"Authorization": accessToken}
-                     )
-    if not r.status_code == 200:
-        raise Exception("Incorrect reply from Webex Teams API. Status code: {}. Text: {}".format(r.status_code, r.text))
-
-    json_data = r.json()
-    if len(json_data["items"]) == 0:
-        raise Exception("There are no messages in the room.")
-    # store the array of messages
-    messages = json_data["items"]
-    # store the text of the first message in the array
-    message = messages[0]["text"]
-    print("Received message: " + message)
-
-    # Checking for /route #
-    gevondenmessage = message.find("/route")
-
-    if gevondenmessage == 0:
-        schrijftextwebex('Geef uw startlocatie in met /route $locatie$')
-
-        while True:
-            # always add 1 second of delay to the loop to not go over a rate limit of API calls
-            time.sleep(1)
-
-            # the Webex Teams GET parameters
-            #  "roomId" is is ID of the selected room
-            #  "max": 1  limits to get only the very last message in the room
-            GetParameters = {
-                "roomId": roomIdToGetMessages,
-                "max": 1
-            }
-
-            # run the call against the messages endpoint of the Webex Teams API using the HTTP GET method
-            r = requests.get("https://api.ciscospark.com/v1/messages",
-                             params=GetParameters,
-                             headers={"Authorization": accessToken}
-                             )
-            # verify if the retuned HTTP status code is 200/OK
-            if not r.status_code == 200:
-                raise Exception(
-                    "Incorrect reply from Webex Teams API. Status code: {}. Text: {}".format(r.status_code, r.text))
-
-            # get the JSON formatted returned data
+        if r.status_code == 200:
             json_data = r.json()
-            # check if there are any messages in the "items" array
             if len(json_data["items"]) == 0:
                 raise Exception("There are no messages in the room.")
-
             # store the array of messages
             messages = json_data["items"]
             # store the text of the first message in the array
             message = messages[0]["text"]
-            print("Received message: " + message)
+            print("received message: " + message)
+            if message.find("/route") == 0:
+                if optie == 0:
+                    locatie = "/route"
+                    schrijftextwebex('Geef uw startlocatie in met /route $locatie$')
+                if optie == 1:
+                    locatie = message[7:]
+                    schrijftextwebex('Geef uw eindlocatie in met /route $locatie$')
+                if optie == 2:
+                    locatie = message[7:]
+                invoer = optie
+                print(locatie)
+        else:
+            print("niet klaar")
+            invoer = -1
+    return locatie
 
-            # Checking for /route #
-            gevondenmessage = message.find("/route")
-            if gevondenmessage == 0:
-                orig = message[7:]
-                schrijftextwebex('Geef uw eindlocatie in met /route $locatie$')
-                # Ophalen van eindlocatie
-                while True:
-                    # always add 1 second of delay to the loop to not go over a rate limit of API calls
-                    time.sleep(1)
+while True:
+    if leestextwebex(0) == "/route":
+        orig = leestextwebex(1)
+        dest = leestextwebex(2)
 
-                    GetParameters = {
-                        "roomId": roomIdToGetMessages,
-                        "max": 1
-                    }
-
-                    r = requests.get("https://api.ciscospark.com/v1/messages",
-                                     params=GetParameters,
-                                     headers={"Authorization": accessToken}
-                                     )
-                    # verify if the retuned HTTP status code is 200/OK
-                    if not r.status_code == 200:
-                        raise Exception(
-                            "Incorrect reply from Webex Teams API. Status code: {}. Text: {}".format(r.status_code,
-                                                                                                     r.text))
-
-                    # get the JSON formatted returned data
-                    json_data = r.json()
-                    # check if there are any messages in the "items" array
-                    if len(json_data["items"]) == 0:
-                        raise Exception("There are no messages in the room.")
-
-                    # store the array of messages
-                    messages = json_data["items"]
-                    # store the text of the first message in the array
-                    message = messages[0]["text"]
-                    print("Received message: " + message)
-
-                    # Checking for /route #
-                    gevondenmessage = message.find("/route")
-                    if gevondenmessage == 0:
-                        dest = message[7:]
-
-                        beschrijving = "------------------------------\n"
-
-                        main_api = "https://www.mapquestapi.com/directions/v2/route?"
-
-                        key = "glMBkWdaVP2Qg4n9u7oisdqlxdKyACt1"
-
-                        url: str = main_api + urllib.parse.urlencode({"key": key, "from": orig, "to": dest})
-
-                        json_data = requests.get(url).json()
-                        json_status = json_data["info"]["statuscode"]
-
-                        for each in json_data["route"]["legs"][0]["maneuvers"]:
-                            beschrijving += ((each["narrative"]) + " (" + str(
-                                "{:.2f}".format((each["distance"]) * 1.61) + " km).\n"))
-                        beschrijving += "------------------------------\n"
-                        beschrijving += "Start opnieuw door het commando /route in te voeren."
-                        schrijftextwebex(beschrijving)
-
-                        break
-
-                break
-
+        beschrijving = "------------------------------\n"
+        main_api = "https://www.mapquestapi.com/directions/v2/route?"
+        key = "glMBkWdaVP2Qg4n9u7oisdqlxdKyACt1"
+        url: str = main_api + urllib.parse.urlencode({"key": key, "from": orig, "to": dest})
+        json_data = requests.get(url).json()
+        json_status = json_data["info"]["statuscode"]
+        for each in json_data["route"]["legs"][0]["maneuvers"]:
+            beschrijving += ((each["narrative"]) + " (" + str(
+                "{:.2f}".format((each["distance"]) * 1.61) + " km).\n"))
+        beschrijving += "------------------------------\n"
+        beschrijving += "Start opnieuw door het commando /route in te voeren."
+        schrijftextwebex(beschrijving)
