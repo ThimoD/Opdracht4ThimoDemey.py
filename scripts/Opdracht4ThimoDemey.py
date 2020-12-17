@@ -103,6 +103,8 @@ def leestextwebex(optie):
             raise Exception("Incorrect reply from Webex Teams API. Status code: {}. Text: {}".format(r.status_code, r.text))
     return locatie
 
+schrijftextwebex('Start het programma met /route.')
+
 while True:
     if leestextwebex(0) == "/route":
         orig = leestextwebex(1)
@@ -120,3 +122,4 @@ while True:
         beschrijving += "------------------------------\n"
         beschrijving += "Start opnieuw door het commando /route in te voeren."
         schrijftextwebex(beschrijving)
+
